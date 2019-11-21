@@ -101,12 +101,12 @@ def hello_world():
     return "hello this is Gyana"
 
 
-@app.route("/books",methods=["GET"])
+@app.route("/books", methods=["GET"])
 def get_books():
     return jsonify({"books details are:": books})
 
 
-@app.route("/books/<int:isbn>",methods=["GET"])
+@app.route("/books/<int:isbn>", methods=["GET"])
 def get_books_by_isbn(isbn):
     return_value = {}
     for book in books:
@@ -116,6 +116,13 @@ def get_books_by_isbn(isbn):
                 "price": book["price"]
             }
     return jsonify(return_value)
+
+
+@app.route("/books", methods=["POST"])
+def add_book():
+    body = request.get_json()
+    books.append(body)
+    return jsonify({"status": "book added"})
 
 
 app.run(port=5000)

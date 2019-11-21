@@ -85,4 +85,14 @@ def update_book(isbn):
     return response
 
 
+@app.route("/books/<int:isbn>", methods=["DELETE"])
+def delete_book(isbn):
+    for book in range(len(books)):
+        if books[book]["isbn"] == isbn:
+            del books[book]
+
+    response = Response("", status=201, mimetype='application/json')
+    return response
+
+
 app.run(port=8000)

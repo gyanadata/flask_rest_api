@@ -1,109 +1,20 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
+
+import json
+
+from book_list import books
 
 app = Flask(__name__)
-
-books = [
-    {
-        'name': 'A',
-        'price': 7.99,
-        'isbn': 9780394800165
-    },
-    {
-        'name': 'B',
-        'price': 6.99,
-        'isbn': 9792371000193
-    },
-    {
-        'name': 'C',
-        'price': 7.99,
-        'isbn': 9800394800165
-    },
-    {
-        'name': 'D',
-        'price': 6.99,
-        'isbn': 9812371000193
-    },
-    {
-        'name': 'E',
-        'price': 7.99,
-        'isbn': 9820394800165
-    },
-    {
-        'name': 'F',
-        'price': 6.99,
-        'isbn': 9832371000193
-    },
-    {
-        'name': 'G',
-        'price': 7.99,
-        'isbn': 9840394800165
-    },
-    {
-        'name': 'H',
-        'price': 6.99,
-        'isbn': 9852371000193
-    },
-    {
-        'name': 'I',
-        'price': 7.99,
-        'isbn': 9860394800165
-    },
-    {
-        'name': 'K',
-        'price': 6.99,
-        'isbn': 9872371000193
-    },
-    {
-        'name': 'L',
-        'price': 7.99,
-        'isbn': 9880394800165
-    },
-    {
-        'name': 'M',
-        'price': 6.99,
-        'isbn': 9892371000193
-    },
-    {
-        'name': 'N',
-        'price': 7.99,
-        'isbn': 9900394800165
-    },
-    {
-        'name': 'O',
-        'price': 6.99,
-        'isbn': 9912371000193
-    },
-    {
-        'name': 'P',
-        'price': 7.99,
-        'isbn': 9920394800165
-    },
-    {
-        'name': 'Q',
-        'price': 6.99,
-        'isbn': 9932371000193
-    },
-    {
-        'name': 'R',
-        'price': 7.99,
-        'isbn': 9940394800165
-    },
-    {
-        'name': 'S',
-        'price': 6.99,
-        'isbn': 9952371000193
-    }
-]
 
 
 @app.route("/")
 def hello_world():
-    return "hello this is Gyana"
+    return "hello this is a welcome message"
 
 
 @app.route("/books", methods=["GET"])
 def get_books():
-    return jsonify({"books details are:": books})
+    return jsonify(books)
 
 
 @app.route("/books/<int:isbn>", methods=["GET"])
@@ -118,11 +29,60 @@ def get_books_by_isbn(isbn):
     return jsonify(return_value)
 
 
-@app.route("/books", methods=["POST"])
+def validbookobject(bookobject):
+    if "name" in bookobject and "price" in bookobject and "isbn" in bookobject:
+        return True
+    else:
+        return False
+
+
+@app.route('/books', methods=['POST'])
 def add_book():
-    body = request.get_json()
-    books.append(body)
-    return jsonify({"status": "book added"})
+    request_data = request.get_json()
+    if validbookobject(request_data):
+        new_book = {
+            "name": request_data['name'],
+            "price": request_data['price'],
+            "isbn": request_data['isbn']
+        }
+        books.insert(0, new_book)
+        response = Response("", status=201, mimetype='application/json')
+        response.headers['Location'] = "/books/" + str(new_book['isbn'])
+        return response
+    else:
+        invalidbookobjecterrormsg = {
+            "error": "Invalid book object passed in request",
+            "helpString": "Data passed in similar to this {'name': 'bookname', 'price': 7.99, 'isbn': 9780394800165 }"
+        }
+        response = Response(json.dumps(invalidbookobjecterrormsg), status=400, mimetype='application/json')
+        return response;
 
 
-app.run(port=5000)
+@app.route('/books/<int:isbn>', methods=['PUT'])
+def replace_book(isbn):
+    request_data = request.get_json()
+    new_book = {
+        'name': request_data['name'],
+        'price': request_data['price'],
+        'isbn': isbn
+    }
+    for book in books:
+        if book["isbn"] == isbn:
+            book.update(new_book)
+
+    return jsonify({"status": "book updated"})
+
+
+@app.route("/books/<int:isbn>", methods=["PATCH"])
+def update_book(isbn):
+    request_data = request.get_json()
+
+    for book in books:
+        if book["isbn"] == isbn:
+            book["name"] = request_data["name"]
+
+    response = Response("", status=201, mimetype='application/json')
+    return response
+
+
+app.run(port=8000)

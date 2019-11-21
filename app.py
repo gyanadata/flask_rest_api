@@ -101,12 +101,12 @@ def hello_world():
     return "hello this is Gyana"
 
 
-@app.route("/books")
+@app.route("/books",methods=["GET"])
 def get_books():
     return jsonify({"books details are:": books})
 
 
-@app.route("/books/<int:isbn>")
+@app.route("/books/<int:isbn>",methods=["GET"])
 def get_books_by_isbn(isbn):
     return_value = {}
     for book in books:

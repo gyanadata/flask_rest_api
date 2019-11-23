@@ -6,9 +6,28 @@ from settings import *
 
 from BookModel import *
 
+import datetime
+
+import jwt
+
+app.config["SECRET_KEY"] = "meow"
+
+
+@app.route("/login", methods=["GET"])
+def get_token():
+    expiration_date = datetime.datetime.utcnow() + datetime.timedelta(seconds=100)
+    token = jwt.encode({"exp": expiration_date}, app.config["SECRET_KEY"], algorithm="HS256")
+    return token
+
 
 @app.route("/books", methods=["GET"])
 def get_books():
+    token = request.args.get("token")
+    try:
+        jwt.decode(token, app.config["SECRET_KEY"])
+    except:
+        return jsonify({"error": "need a valid token to view this page"})
+
     return jsonify({"books": Book.get_all_books()})
 
 
@@ -23,6 +42,7 @@ def validbookobject(bookobject):
         return True
     else:
         return False
+
 
 @app.route('/books', methods=['POST'])
 def add_book():
@@ -44,7 +64,7 @@ def add_book():
 @app.route('/books/<int:isbn>', methods=['PUT'])
 def replace_book(isbn):
     request_data = request.get_json()
-    Book.replace_book(isbn, request_data["price"],request_data["name"])
+    Book.replace_book(isbn, request_data["price"], request_data["name"])
 
     return jsonify({"status": "book updated"})
 

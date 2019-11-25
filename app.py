@@ -6,27 +6,10 @@ from settings import *
 
 from BookModel import *
 
-import datetime
-
-import jwt
-
-app.config["SECRET_KEY"] = "meow"
-
-
-@app.route("/login", methods=["GET"])
-def get_token():
-    expiration_date = datetime.datetime.utcnow() + datetime.timedelta(seconds=100)
-    token = jwt.encode({"exp": expiration_date}, app.config["SECRET_KEY"], algorithm="HS256")
-    return token
 
 
 @app.route("/books", methods=["GET"])
 def get_books():
-    token = request.args.get("token")
-    try:
-        jwt.decode(token, app.config["SECRET_KEY"])
-    except:
-        return jsonify({"error": "need a valid token to view this page"})
 
     return jsonify({"books": Book.get_all_books()})
 
